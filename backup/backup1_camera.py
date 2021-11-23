@@ -35,7 +35,7 @@ def add_camera_args(parser):
                               'rtsp://admin:123456@192.168.1.64:554'))
     parser.add_argument('--rtsp_latency', type=int, default=200,
                         help='RTSP latency in ms [200]')
-    parser.add_argument('--usb', type=int, default=0,
+    parser.add_argument('--usb', type=int, default=None,
                         help='USB webcam device id (/dev/video?) [None]')
     parser.add_argument('--onboard', type=int, default=None,
                         help='Jetson onboard camera [None]')

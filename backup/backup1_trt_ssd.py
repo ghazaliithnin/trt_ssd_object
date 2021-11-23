@@ -20,7 +20,14 @@ from utils.visualization import BBoxVisualization
 
 WINDOW_NAME = 'TrtSsdDemo'
 INPUT_HW = (300, 300)
-SUPPORTED_MODELS = ['ssd_mobilenet_v1_coco']
+SUPPORTED_MODELS = [
+    'ssd_mobilenet_v1_coco',
+    'ssd_mobilenet_v1_egohands',
+    'ssd_mobilenet_v2_coco',
+    'ssd_mobilenet_v2_egohands',
+    'ssd_inception_v2_coco',
+    'ssdlite_mobilenet_v2_coco',
+]
 
 
 def parse_args():
@@ -75,6 +82,8 @@ def loop_and_detect(cam, trt_ssd, conf_th, vis):
 def main():
     args = parse_args()
     cam = Camera(args)
+    #cam = Camera("--usb 0")
+    #cam = Camera(0)
     if not cam.isOpened():
         raise SystemExit('ERROR: failed to open camera!')
 

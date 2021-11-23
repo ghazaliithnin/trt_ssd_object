@@ -3,7 +3,9 @@
 This script demonstrates how to do real-time object detection with
 TensorRT optimized Single-Shot Multibox Detector (SSD) engine.
 """
-
+from flask import Flask, render_template, Response
+import cv2
+app = Flask(__name__)
 
 import time
 import argparse
@@ -20,7 +22,14 @@ from utils.visualization import BBoxVisualization
 
 WINDOW_NAME = 'TrtSsdDemo'
 INPUT_HW = (300, 300)
-SUPPORTED_MODELS = ['ssd_mobilenet_v1_coco']
+SUPPORTED_MODELS = [
+    'ssd_mobilenet_v1_coco',
+    'ssd_mobilenet_v1_egohands',
+    'ssd_mobilenet_v2_coco',
+    'ssd_mobilenet_v2_egohands',
+    'ssd_inception_v2_coco',
+    'ssdlite_mobilenet_v2_coco',
+]
 
 
 def parse_args():
@@ -58,21 +67,39 @@ def loop_and_detect(cam, trt_ssd, conf_th, vis):
         boxes, confs, clss = trt_ssd.detect(img, conf_th)
         img = vis.draw_bboxes(img, boxes, confs, clss)
         img = show_fps(img, fps)
-        cv2.imshow(WINDOW_NAME, img)
+        #cv2.imshow(WINDOW_NAME, img)
         toc = time.time()
         curr_fps = 1.0 / (toc - tic)
         # calculate an exponentially decaying average of fps number
         fps = curr_fps if fps == 0.0 else (fps*0.95 + curr_fps*0.05)
         tic = toc
+        
+        #########################
+        ## web streaming
+        ret, buffer = cv2.imencode('.jpg', frame)
+        frame = buffer.tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')  # concat frame one by one and show result
+        #####
+
+        
+        '''
         key = cv2.waitKey(1)
         if key == 27:  # ESC key: quit program
             break
         elif key == ord('F') or key == ord('f'):  # Toggle fullscreen
             full_scrn = not full_scrn
             set_display(WINDOW_NAME, full_scrn)
+        '''
+        
 
+def index():
+    print("in index")
+    return render_template('index.html')
 
-def main():
+@app.route('/video_feed')
+def video_feed():
+    print("in video_feed")
     args = parse_args()
     cam = Camera(args)
     if not cam.isOpened():
@@ -87,9 +114,10 @@ def main():
     vis = BBoxVisualization(cls_dict)
     loop_and_detect(cam, trt_ssd, conf_th=0.3, vis=vis)
 
-    cam.release()
-    cv2.destroyAllWindows()
+    #cam.release()
+    #cv2.destroyAllWindows()
+    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 
 if __name__ == '__main__':
-    main()
+    app.run(debug=True)
