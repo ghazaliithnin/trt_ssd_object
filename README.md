@@ -13,3 +13,5 @@ python3 stream_app.py
 python3 basic_camera.py
 
 
+
+dev_trt_app (work in progress)
